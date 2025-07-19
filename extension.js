@@ -27,26 +27,31 @@ import {
   gettext as _,
 } from "resource:///org/gnome/shell/extensions/extension.js";
 import * as PanelMenu from "resource:///org/gnome/shell/ui/panelMenu.js";
-
 import * as Main from "resource:///org/gnome/shell/ui/main.js";
-
-let path;
 
 let gOnIcon;
 let gCheckIcon;
 let gOffIcon;
-
-const loop = new GLib.MainLoop(null, false);
+let path = null;
 
 function checkStatus(indicator) {
-  var [ok, out, err, exit] = GLib.spawn_command_line_sync(
-    "cat /etc/ufw/ufw.conf"
-  );
-
-  if (out.toString().includes("ENABLED=yes") > 0) {
-    indicator._icon.gicon = gOnIcon;
-  } else {
-    indicator._icon.gicon = gOffIcon;
+  try {
+    let file = Gio.File.new_for_path("/etc/ufw/ufw.conf");
+    file.load_contents_async(null, (file, res) => {
+      try {
+        let [, contents] = file.load_contents_finish(res);
+        let text = imports.byteArray.toString(contents);
+        if (text.includes("ENABLED=yes")) {
+          indicator._icon.gicon = gOnIcon;
+        } else {
+          indicator._icon.gicon = gOffIcon;
+        }
+      } catch (e) {
+        console.log(e, "Failed to read ufw.conf");
+      }
+    });
+  } catch (e) {
+    console.log(e, "Error checking UFW status");
   }
 }
 
@@ -59,16 +64,16 @@ const Indicator = GObject.registerClass(
         gicon: gCheckIcon,
         style_class: "system-status-icon",
       });
+
       this.add_child(this._icon);
 
-      // Connect click handler to launch `gufw`
       this.connect("button-press-event", () => {
         try {
-          GLib.spawn_command_line_async("gufw");
+          Gio.Subprocess.new(["gufw"], Gio.SubprocessFlags.NONE);
         } catch (e) {
-          console.log("Failed to launch gufw: " + e);
+          console.log(e, "Failed to launch gufw");
         }
-        return Clutter.EVENT_STOP; // Prevent further event propagation
+        return Clutter.EVENT_STOP;
       });
     }
   }
@@ -76,30 +81,37 @@ const Indicator = GObject.registerClass(
 
 export default class IndicatorExtension extends Extension {
   enable() {
-    this.timeoutId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 5, () => {
-      checkStatus(this._indicator);
-
-      return GLib.SOURCE_CONTINUE;
-    });
-
     path = this.path;
 
-    gOnIcon = Gio.icon_new_for_string(path + "/on.png");
-    gCheckIcon = Gio.icon_new_for_string(path + "/check.png");
-    gOffIcon = Gio.icon_new_for_string(path + "/off.png");
+    gOnIcon = Gio.icon_new_for_string(`${path}/on.png`);
+    gCheckIcon = Gio.icon_new_for_string(`${path}/check.png`);
+    gOffIcon = Gio.icon_new_for_string(`${path}/off.png`);
 
     this._indicator = new Indicator();
-
     Main.panel.addToStatusArea(this.uuid, this._indicator);
 
     this._indicator._icon.gicon = gCheckIcon;
 
-    loop.runAsync();
+    this._timeoutId = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 5, () => {
+      checkStatus(this._indicator);
+      return GLib.SOURCE_CONTINUE;
+    });
   }
 
   disable() {
-    GLib.Source.remove(this.timeoutId);
-    this._indicator.destroy();
-    this._indicator = null;
+    if (this._timeoutId) {
+      GLib.Source.remove(this._timeoutId);
+      this._timeoutId = null;
+    }
+
+    if (this._indicator) {
+      this._indicator.destroy();
+      this._indicator = null;
+    }
+
+    gOnIcon = null;
+    gOffIcon = null;
+    gCheckIcon = null;
+    path = null;
   }
 }

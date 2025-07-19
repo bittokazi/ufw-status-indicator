@@ -1,7 +1,7 @@
 {
   "name": "UFW Status Indicator",
   "description": "Shows UFW status in system indicator. If gufw is installed then clicking on status icon also opens it",
-  "uuid": "ufw-status-indicator@bitto.kazi@gmail.com",
+  "uuid": "ufw-status-indicator@bittokazi.com",
   "url": "https://github.com/bittokazi/ufw-status-indicator",
   "shell-version": ["45", "46", "47", "48"]
 }
