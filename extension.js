@@ -40,7 +40,7 @@ function checkStatus(indicator) {
     file.load_contents_async(null, (file, res) => {
       try {
         let [, contents] = file.load_contents_finish(res);
-        let text = imports.byteArray.toString(contents);
+        let text = new TextDecoder().decode(contents);
         if (text.includes("ENABLED=yes")) {
           indicator._icon.gicon = gOnIcon;
         } else {
