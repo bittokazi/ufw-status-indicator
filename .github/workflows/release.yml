@@ -20,6 +20,7 @@ jobs:
       - name: Package extension
         run: |
           gnome-extensions pack ufw-status-indicator@bittokazi.com/
+          ls -al
           mv ufw-status-indicator@bittokazi.com.shell-extension.zip ufw-status-indicator@bittokazi.com-${GITHUB_REF_NAME}.zip
 
       - name: Upload as GitHub release asset
