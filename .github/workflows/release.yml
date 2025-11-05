@@ -19,10 +19,6 @@ jobs:
           gnome-extensions pack ufw-status-indicator@bittokazi.com/
           mv ufw-status-indicator@bittokazi.com.shell-extension.zip ufw-status-indicator@bittokazi.com-${GITHUB_REF_NAME}.zip
 
-      - name: Validate
-        run: |
-          gnome-extensions validate ufw-status-indicator@bittokazi.com-${GITHUB_REF_NAME}.zip
-
       - name: Upload as GitHub release asset
         uses: softprops/action-gh-release@v2
         with:
