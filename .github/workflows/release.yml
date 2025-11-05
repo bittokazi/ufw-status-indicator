@@ -20,10 +20,9 @@ jobs:
       - name: Package extension
         run: |
           gnome-extensions pack ufw-status-indicator@bittokazi.com/
-          ls -al
-          mv ufw-status-indicator@bittokazi.com.shell-extension.zip ufw-status-indicator@bittokazi.com-${GITHUB_REF_NAME}.zip
+          mv ufw-status-indicator@bittokazi.com.shell-extension.zip ufw-status-indicator@bittokazi.com-${{ github.ref_name }}.zip
 
       - name: Upload as GitHub release asset
         uses: softprops/action-gh-release@v2
         with:
-          files: ufw-status-indicator@bittokazi.com-${GITHUB_REF_NAME}.zip
+          files: ufw-status-indicator@bittokazi.com-${{ github.ref_name }}.zip
