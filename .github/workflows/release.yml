@@ -17,6 +17,7 @@ jobs:
       - name: Package extension
         run: |
           pwd
+          ls -al
           gnome-extensions pack ufw-status-indicator@bittokazi.com --force
           mv ufw-status-indicator@bittokazi.com.shell-extension.zip ufw-status-indicator@bittokazi.com-${GITHUB_REF_NAME}.zip
 
